@@ -123,6 +123,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean allowEdit;              // Should we allow the user to crop the image.
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
+    protected final static String[] permissionsAPI33 = { Manifest.permission.CAMERA, Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.READ_MEDIA_VIDEO };
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -272,15 +273,27 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
         }
 
+        String[] perms;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            perms = permissionsAPI33;
+        } else {
+            perms = permissions;
+        }
+
         if (takePicturePermission && saveAlbumPermission) {
             takePicture(returnType, encodingType);
         } else if (saveAlbumPermission) {
             PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
         } else if (takePicturePermission) {
-            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE});
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                PermissionHelper.requestPermissions(this, TAKE_PIC_SEC,
+                        new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.READ_MEDIA_VIDEO});
+            } else {
+                PermissionHelper.requestPermissions(this, TAKE_PIC_SEC,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE});
+            }
         } else {
-            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, permissions);
+            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, perms);
         }
     }
 
